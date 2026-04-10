@@ -1,16 +1,32 @@
 import sqlite3
 
 conn = sqlite3.connect("database.db")
+c = conn.cursor()
 
-conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, password TEXT)")
-conn.execute("CREATE TABLE packages (id INTEGER PRIMARY KEY AUTOINCREMENT, place TEXT, price INTEGER)")
-conn.execute("CREATE TABLE bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, package_id INTEGER)")
+c.execute("""
+CREATE TABLE IF NOT EXISTS users(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT,
+email TEXT,
+password TEXT
+)
+""")
 
-conn.execute("INSERT INTO packages (place, price) VALUES ('Goa', 5000)")
-conn.execute("INSERT INTO packages (place, price) VALUES ('Manali', 8000)")
-conn.execute("INSERT INTO packages (place, price) VALUES ('Kerala', 7000)")
+c.execute("""
+CREATE TABLE IF NOT EXISTS packages(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+place TEXT,
+price TEXT
+)
+""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS bookings(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+user_id INTEGER,
+package_id INTEGER
+)
+""")
 
 conn.commit()
 conn.close()
-
-print("Database Created!")
