@@ -2,41 +2,101 @@
 <html>
 <head>
 <title>Aakash Travels</title>
-<style>
-body { font-family:Arial; background:#f4f6f8; text-align:center; }
-h1 { background:#007bff; color:white; padding:15px; }
 
-.card {
-    background:white;
-    width:300px;
-    margin:20px auto;
-    padding:15px;
-    border-radius:10px;
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f4f6f8;
 }
 
+/* NAVBAR */
+.navbar {
+    background: #007bff;
+    padding: 15px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar a {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* TITLE */
+h2 {
+    text-align: center;
+}
+
+/* CARD CONTAINER */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* CARD */
+.card {
+    background: white;
+    width: 250px;
+    margin: 15px;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px gray;
+    text-align: center;
+}
+
+/* BUTTON */
 .btn {
-    background:#ff5722;
-    color:white;
-    padding:8px;
-    text-decoration:none;
-    border-radius:5px;
+    background: #ff5722;
+    color: white;
+    padding: 8px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background: #e64a19;
 }
 </style>
+
 </head>
 <body>
 
-<h1>Aakash Travels</h1>
+<!-- NAVBAR -->
+<div class="navbar">
+    <h2>Aakash Travels ✈️</h2>
 
-<a href="{{ url_for('login') }}">Login</a> |
-<a href="{{ url_for('register') }}">Register</a> |
-<a href="{{ url_for('logout') }}">Logout</a>
+    <div>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</div>
 
 <h2>Packages</h2>
 
+<!-- CARDS -->
+<div class="container">
+
 {% for p in packages %}
-    <p>{{ p['place'] }} - ₹{{ p['price'] }}</p>
-    <a href="{{ url_for('payment', id=p['id']) }}">Book</a>
+    <div class="card">
+        <h3>{{ p['place'] }}</h3>
+        <p>₹{{ p['price'] }}</p>
+
+        <a class="btn" href="{{ url_for('payment', id=p['id']) }}">
+            Book Now
+        </a>
+    </div>
 {% endfor %}
+
+</div>
 
 </body>
 </html>
