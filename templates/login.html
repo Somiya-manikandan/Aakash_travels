@@ -1,32 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<style>
-body { text-align:center; font-family:Arial; }
-form { margin-top:50px; }
-input { padding:8px; margin:5px; }
-button {
-    background:#007bff;
-    color:white;
-    padding:10px;
-    border:none;
-    border-radius:5px;
-}
-</style>
+    <title>Login</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- ICONS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
-<h2>Login</h2>
+<div class="container">
+    <h2>Login</h2>
 
-<form method="POST">
+    <form method="POST">
 
-    <input type="email" name="email" placeholder="Enter Email" required><br><br>
+        <div class="input-box">
+            <i class="fa fa-envelope"></i>
+            <input type="email" name="email" placeholder="Enter Email" required>
+        </div>
 
-    <input type="password" name="password" placeholder="Enter Password" required><br><br>
+        <div class="input-box">
+            <i class="fa fa-lock"></i>
+            <input type="password" name="password" placeholder="Enter Password" required>
+        </div>
 
-    <button type="submit">Login</button>
+        <button type="submit">Login</button>
 
-</form>
+        <p>Don't have an account? <a href="/register">Register</a></p>
+
+    </form>
+</div>
+
 </body>
 </html>
