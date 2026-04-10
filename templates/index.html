@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Aakash Travels</title>
+    <title>Aakash Travels</title>
 </head>
 <body>
 
-<h1>Aakash Travels</h1>
+<h1>🌍 Aakash Travels</h1>
 
 <a href="{{ url_for('login') }}">Login</a> |
 <a href="{{ url_for('register') }}">Register</a> |
@@ -14,8 +14,8 @@
 <h2>Packages</h2>
 
 {% for p in packages %}
-    <p>{{ p.place }} - ₹{{ p.price }}</p>
-    <a href="{{ url_for('book', id=p.id) }}">Book</a>
+    <p><b>{{ p.place }}</b> - ₹{{ p.price }}</p>
+    <a href="{{ url_for('book', id=p.id) }}">Book Now</a>
     <hr>
 {% endfor %}
 
