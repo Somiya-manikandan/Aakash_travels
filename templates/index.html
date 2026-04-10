@@ -74,6 +74,10 @@ h2 {
     <h2>Aakash Travels ✈️</h2>
 
     <div>
+        {% if session.get('name') %}
+            <span>Welcome, {{ session.get('name') }} 👋</span>
+        {% endif %}
+
         <a href="{{ url_for('login') }}">Login</a>
         <a href="{{ url_for('register') }}">Register</a>
         <a href="{{ url_for('logout') }}">Logout</a>
