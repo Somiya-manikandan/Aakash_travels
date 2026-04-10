@@ -5,18 +5,13 @@
 </head>
 <body>
 
-<h2>✏️ Edit Package</h2>
+<h2>Edit</h2>
 
-<form method="post" action="{{ url_for('update_package', id=package.id) }}">
-    Place:<br>
-    <input type="text" name="place" value="{{ package.place }}" required><br><br>
-
-    Price:<br>
-    <input type="text" name="price" value="{{ package.price }}" required><br><br>
-
-    <button type="submit">Update</button>
+<form method="post" action="{{ url_for('update_package', id=package['id']) }}">
+<input name="place" value="{{ package['place'] }}">
+<input name="price" value="{{ package['price'] }}">
+<button>Update</button>
 </form>
-
 <br>
 <a href="{{ url_for('admin') }}">Back to Admin</a>
 
