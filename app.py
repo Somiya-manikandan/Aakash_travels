@@ -25,7 +25,8 @@ def home():
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        name = request.form['name']   # ✅ FIX
+
+        name = request.form['name']   # 👈 ADD THIS LINE HERE
         email = request.form['email']
         password = request.form['password']
 
