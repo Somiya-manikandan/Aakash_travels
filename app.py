@@ -1,124 +1,177 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
-import os
-
-# Auto create DB
-if not os.path.exists("database.db"):
-    import database
 
 app = Flask(__name__)
-app.secret_key = "aakash"
+app.secret_key = "secret123"
 
-def get_db():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
-
-# HOME
+# ---------------- HOME ----------------
 @app.route('/')
 def home():
-    db = get_db()
-    packages = db.execute("SELECT * FROM packages").fetchall()
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
+
+    conn.close()
+
     return render_template('index.html', packages=packages)
 
-# REGISTER
+# ---------------- REGISTER ----------------
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        db = get_db()
-        db.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
-                   (request.form['name'], request.form['email'], request.form['password']))
-        db.commit()
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+
+        c.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
+                  (name,email,password))
+
+        conn.commit()
+        conn.close()
+
         return redirect(url_for('login'))
+
     return render_template('register.html')
 
-# LOGIN
+# ---------------- LOGIN ----------------
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE email=? AND password=?",
-                          (request.form['email'], request.form['password'])).fetchone()
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM users WHERE email=? AND password=?",
+                  (email,password))
+
+        user = c.fetchone()
+        conn.close()
+
         if user:
-            session['user'] = user['id']
-            session['name'] = user['name']
-
-            if request.form['email'] == "admin@gmail.com":
-                return redirect(url_for('admin'))
-
+            session['user'] = email
             return redirect(url_for('home'))
+
     return render_template('login.html')
 
-# LOGOUT
+# ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
-    session.clear()
+    session.pop('user', None)
     return redirect(url_for('home'))
 
-# BOOKING
-@app.route('/book/<int:id>', methods=['GET','POST'])
-def book(id):
+# ---------------- PAYMENT ----------------
+@app.route('/payment/<int:id>', methods=['GET','POST'])
+def payment(id):
     if 'user' not in session:
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        db = get_db()
-        db.execute("INSERT INTO bookings (user_id, package_id) VALUES (?,?)",
-                   (session['user'], id))
-        db.commit()
-        return "✅ Booking Successful!"
+        method = request.form['method']
+        email = session['user']
 
-    return render_template('booking.html')
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
 
-# ADMIN PANEL
+        # user name
+        c.execute("SELECT name FROM users WHERE email=?", (email,))
+        name = c.fetchone()[0]
+
+        # package
+        c.execute("SELECT place FROM packages WHERE id=?", (id,))
+        place = c.fetchone()[0]
+
+        # insert booking
+        c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
+                  (name, place, method))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('home'))
+
+    return render_template('payment.html')
+
+# ---------------- ADMIN ----------------
 @app.route('/admin')
 def admin():
-    db = get_db()
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
 
-    bookings = db.execute("""
-        SELECT bookings.id, users.name, packages.place
-        FROM bookings
-        JOIN users ON bookings.user_id = users.id
-        JOIN packages ON bookings.package_id = packages.id
-    """).fetchall()
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
 
-    packages = db.execute("SELECT * FROM packages").fetchall()
+    c.execute("SELECT * FROM bookings")
+    bookings = c.fetchall()
+
+    conn.close()
 
     return render_template('admin.html', packages=packages, bookings=bookings)
 
-# DELETE PACKAGE
-@app.route('/delete_package/<int:id>')
-def delete_package(id):
-    db = get_db()
-    db.execute("DELETE FROM packages WHERE id=?", (id,))
-    db.commit()
-    return redirect(url_for('admin'))
-
-# EDIT PACKAGE
-@app.route('/edit_package/<int:id>')
-def edit_package(id):
-    db = get_db()
-    package = db.execute("SELECT * FROM packages WHERE id=?", (id,)).fetchone()
-    return render_template('edit_package.html', package=package)
-
-# UPDATE PACKAGE
-@app.route('/update_package/<int:id>', methods=['POST'])
-def update_package(id):
-    db = get_db()
-    db.execute("UPDATE packages SET place=?, price=? WHERE id=?",
-               (request.form['place'], request.form['price'], id))
-    db.commit()
-    return redirect(url_for('admin'))
-
-# ADD PACKAGE
+# ---------------- ADD PACKAGE ----------------
 @app.route('/add_package', methods=['POST'])
 def add_package():
-    db = get_db()
-    db.execute("INSERT INTO packages (place, price) VALUES (?,?)",
-               (request.form['place'], request.form['price']))
-    db.commit()
+    place = request.form['place']
+    price = request.form['price']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("INSERT INTO packages (place,price) VALUES (?,?)",
+              (place,price))
+
+    conn.commit()
+    conn.close()
+
     return redirect(url_for('admin'))
 
-# RUN APP (RENDER FIX)
+# ---------------- DELETE ----------------
+@app.route('/delete/<int:id>')
+def delete_package(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("DELETE FROM packages WHERE id=?", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
+# ---------------- EDIT ----------------
+@app.route('/edit/<int:id>')
+def edit_package(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM packages WHERE id=?", (id,))
+    package = c.fetchone()
+
+    conn.close()
+
+    return render_template('edit_package.html', package=package)
+
+@app.route('/update/<int:id>', methods=['POST'])
+def update_package(id):
+    place = request.form['place']
+    price = request.form['price']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("UPDATE packages SET place=?, price=? WHERE id=?",
+              (place,price,id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    app.run(host="0.0.0.0", debug=True)
