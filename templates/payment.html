@@ -86,13 +86,13 @@ img {
 
 <!-- ✅ UPI QR SCANNER -->
 <div class="qr">
-<h3>📱 Scan UPI QR</h3>
+<h3>📱 Scan & Pay</h3>
 
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=demo@upi&pn=AakashTravels&am={{ package[2] }}" />
+<img src="{{ url_for('static', filename='qr.png') }}" width="250">
 
-<p>Use Google Pay / PhonePe / Paytm</p>
+<p>UPI ID: somiyamanikandan965@okaxis</p>
+<p>Scan using Google Pay / PhonePe / Paytm</p>
 </div>
-
 </div>
 
 </body>
