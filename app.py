@@ -60,7 +60,9 @@ def login():
         conn.close()
 
         if user:
-            session['user'] = email
+            session['user'] = email        # for login check
+            session['name'] = user[1]      # 👈 store NAME
+
             return redirect(url_for('home'))
         else:
             return "Invalid login"
