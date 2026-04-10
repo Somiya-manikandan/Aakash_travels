@@ -34,11 +34,8 @@ h1 { background:#007bff; color:white; padding:15px; }
 <h2>Packages</h2>
 
 {% for p in packages %}
-<div class="card">
-    <h3>{{ p['place'] }}</h3>
-    <p>₹{{ p['price'] }}</p>
-    <a class="btn" href="{{ url_for('payment', id=p['id']) }}">Book Now</a>
-</div>
+    <p>{{ p['place'] }} - ₹{{ p['price'] }}</p>
+    <a href="{{ url_for('payment', id=p['id']) }}">Book</a>
 {% endfor %}
 
 </body>
