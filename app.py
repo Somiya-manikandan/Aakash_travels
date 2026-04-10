@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, redirect, session
 import sqlite3
 import os
 
-# ✅ IMPORTANT: Auto-create database on Render
+# Auto create DB (for Render)
 if not os.path.exists("database.db"):
-    import database   # this will run database.py once
+    import database
 
 app = Flask(__name__)
 app.secret_key = "aakash"
@@ -14,14 +14,14 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# HOME
+# ---------------- HOME ----------------
 @app.route('/')
 def home():
     db = get_db()
     packages = db.execute("SELECT * FROM packages").fetchall()
     return render_template('index.html', packages=packages)
 
-# REGISTER
+# ---------------- REGISTER ----------------
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
@@ -32,7 +32,7 @@ def register():
         return redirect('/login')
     return render_template('register.html')
 
-# LOGIN
+# ---------------- LOGIN ----------------
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -43,20 +43,19 @@ def login():
             session['user'] = user['id']
             session['name'] = user['name']
 
-            # ADMIN LOGIN
             if request.form['email'] == "admin@gmail.com":
                 return redirect('/admin')
 
             return redirect('/')
     return render_template('login.html')
 
-# LOGOUT
+# ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-# BOOKING
+# ---------------- BOOK ----------------
 @app.route('/book/<int:id>', methods=['GET','POST'])
 def book(id):
     if 'user' not in session:
@@ -71,7 +70,7 @@ def book(id):
 
     return render_template('booking.html')
 
-# ADMIN PANEL
+# ---------------- ADMIN ----------------
 @app.route('/admin')
 def admin():
     db = get_db()
@@ -87,7 +86,7 @@ def admin():
 
     return render_template('admin.html', packages=packages, bookings=bookings)
 
-# DELETE PACKAGE
+# ---------------- DELETE ----------------
 @app.route('/delete_package/<int:id>')
 def delete_package(id):
     db = get_db()
@@ -95,14 +94,14 @@ def delete_package(id):
     db.commit()
     return redirect('/admin')
 
-# EDIT PACKAGE
+# ---------------- EDIT ----------------
 @app.route('/edit_package/<int:id>')
 def edit_package(id):
     db = get_db()
     package = db.execute("SELECT * FROM packages WHERE id=?", (id,)).fetchone()
     return render_template('edit_package.html', package=package)
 
-# UPDATE PACKAGE
+# ---------------- UPDATE ----------------
 @app.route('/update_package/<int:id>', methods=['POST'])
 def update_package(id):
     db = get_db()
@@ -111,7 +110,7 @@ def update_package(id):
     db.commit()
     return redirect('/admin')
 
-# ADD PACKAGE
+# ---------------- ADD ----------------
 @app.route('/add_package', methods=['POST'])
 def add_package():
     db = get_db()
@@ -120,4 +119,6 @@ def add_package():
     db.commit()
     return redirect('/admin')
 
-app.run(debug=True)
+# ✅ IMPORTANT FOR RENDER
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
