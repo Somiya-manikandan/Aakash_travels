@@ -1,29 +1,72 @@
-✅ STEP 1: FIX DATABASE (VERY IMPORTANT)
-
-Run this once:
-
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 
-conn = sqlite3.connect("database.db")
-c = conn.cursor()
+app = Flask(__name__)
+app.secret_key = "secret123"
 
-# recreate bookings table safely
-c.execute("DROP TABLE IF EXISTS bookings")
+# ---------- HOME ----------
+@app.route('/')
+def home():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
 
-c.execute("""
-CREATE TABLE bookings(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-name TEXT,
-place TEXT,
-payment TEXT)
-""")
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
 
-conn.commit()
-conn.close()
-✅ STEP 2: FIX app.py PAYMENT ROUTE (SAFE VERSION)
+    conn.close()
+    return render_template('index.html', packages=packages)
 
-Replace your payment function with this 👇
+# ---------- REGISTER ----------
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
 
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+
+        c.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
+                  (name,email,password))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+# ---------- LOGIN ----------
+@app.route('/login', methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM users WHERE email=? AND password=?",
+                  (email,password))
+
+        user = c.fetchone()
+        conn.close()
+
+        if user:
+            session['user'] = email
+            return redirect(url_for('home'))
+
+    return render_template('login.html')
+
+# ---------- LOGOUT ----------
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('home'))
+
+# ---------- PAYMENT ----------
 @app.route('/payment/<int:id>', methods=['GET','POST'])
 def payment(id):
     if 'user' not in session:
@@ -32,7 +75,7 @@ def payment(id):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # get package safely
+    # get package
     c.execute("SELECT * FROM packages WHERE id=?", (id,))
     package = c.fetchone()
 
@@ -47,7 +90,7 @@ def payment(id):
 
         email = session['user']
 
-        # get user name safely
+        # get user
         c.execute("SELECT name FROM users WHERE email=?", (email,))
         user = c.fetchone()
 
@@ -57,6 +100,7 @@ def payment(id):
         name = user[0]
         place = package[1]
 
+        # insert booking
         c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
                   (name, place, method))
 
@@ -67,82 +111,86 @@ def payment(id):
 
     conn.close()
     return render_template('payment.html', package=package)
-✅ STEP 3: ADD SUCCESS PAGE ROUTE
 
-Add this in app.py 👇
-
+# ---------- SUCCESS ----------
 @app.route('/success')
 def success():
     return render_template('success.html')
-💳 STEP 4: UPDATE payment.html (WITH UI)
-<!DOCTYPE html>
-<html>
-<head>
-<title>Payment</title>
-<style>
-body { text-align:center; font-family:Arial; }
 
-.box {
-    margin-top:50px;
-}
+# ---------- ADMIN ----------
+@app.route('/admin')
+def admin():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
 
-button {
-    background:#28a745;
-    color:white;
-    padding:10px;
-    border:none;
-    border-radius:5px;
-}
-</style>
-</head>
-<body>
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
 
-<h2>💳 Choose Payment Method</h2>
+    c.execute("SELECT * FROM bookings")
+    bookings = c.fetchall()
 
-<div class="box">
-<form method="post">
+    conn.close()
+    return render_template('admin.html', packages=packages, bookings=bookings)
 
-<input type="radio" name="method" value="UPI" required> UPI<br><br>
-<input type="radio" name="method" value="Card"> Card<br><br>
-<input type="radio" name="method" value="Cash"> Cash<br><br>
+# ---------- ADD PACKAGE ----------
+@app.route('/add_package', methods=['POST'])
+def add_package():
+    place = request.form['place']
+    price = request.form['price']
 
-<button type="submit">Pay Now</button>
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
 
-</form>
-</div>
+    c.execute("INSERT INTO packages (place,price) VALUES (?,?)",
+              (place,price))
 
-</body>
-</html>
-🎉 STEP 5: CREATE success.html
-<!DOCTYPE html>
-<html>
-<head>
-<title>Success</title>
-<style>
-body { text-align:center; font-family:Arial; }
+    conn.commit()
+    conn.close()
 
-.success {
-    margin-top:100px;
-    color:green;
-}
-</style>
-</head>
-<body>
+    return redirect(url_for('admin'))
 
-<div class="success">
-<h1>✅ Payment Successful</h1>
-<p>Your booking is confirmed 🎉</p>
+# ---------- DELETE ----------
+@app.route('/delete/<int:id>')
+def delete_package(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
 
-<a href="/">Go Home</a>
-</div>
+    c.execute("DELETE FROM packages WHERE id=?", (id,))
 
-</body>
-</html>
-📱 STEP 6: ADD UPI QR SCANNER (DEMO)
+    conn.commit()
+    conn.close()
 
-Update payment.html (add below form):
+    return redirect(url_for('admin'))
 
-<h3>Scan UPI QR</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=demo@upi&pn=AakashTravels&am=500" />
+# ---------- EDIT ----------
+@app.route('/edit/<int:id>')
+def edit_package(id):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
 
-👉 This shows QR code for demo payment (Viva perfect 💯)
+    c.execute("SELECT * FROM packages WHERE id=?", (id,))
+    package = c.fetchone()
+
+    conn.close()
+    return render_template('edit_package.html', package=package)
+
+@app.route('/update/<int:id>', methods=['POST'])
+def update_package(id):
+    place = request.form['place']
+    price = request.form['price']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("UPDATE packages SET place=?, price=? WHERE id=?",
+              (place,price,id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=True)
