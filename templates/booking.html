@@ -5,12 +5,19 @@
 </head>
 <body>
 
-<h2>📦 Confirm Booking</h2>
+<h2>Login</h2>
 
-<form method="post">
-    <button type="submit">Confirm Booking</button>
+<form method="POST">
+
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
+
+    <label>Password:</label><br>
+    <input type="password" name="password" required><br><br>
+
+    <button type="submit">Login</button>
+
 </form>
-
 <br>
 <a href="{{ url_for('home') }}">Back to Home</a>
 
