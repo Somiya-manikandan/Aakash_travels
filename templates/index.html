@@ -2,21 +2,72 @@
 <html>
 <head>
     <title>Aakash Travels</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f6f8;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+        }
+
+        .navbar a {
+            margin: 10px;
+            text-decoration: none;
+            color: white;
+            background-color: #28a745;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        .navbar a:hover {
+            background-color: #218838;
+        }
+
+        .card {
+            background: white;
+            margin: 20px auto;
+            padding: 15px;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px gray;
+        }
+
+        .btn {
+            background-color: #ff5722;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #e64a19;
+        }
+    </style>
 </head>
 <body>
 
 <h1>🌍 Aakash Travels</h1>
 
-<a href="{{ url_for('login') }}">Login</a> |
-<a href="{{ url_for('register') }}">Register</a> |
-<a href="{{ url_for('logout') }}">Logout</a>
+<div class="navbar">
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('register') }}">Register</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</div>
 
-<h2>Packages</h2>
+<h2>✨ Travel Packages</h2>
 
 {% for p in packages %}
-    <p><b>{{ p.place }}</b> - ₹{{ p.price }}</p>
-    <a href="{{ url_for('book', id=p.id) }}">Book Now</a>
-    <hr>
+<div class="card">
+    <h3>{{ p.place }}</h3>
+    <p>Price: ₹{{ p.price }}</p>
+    <a class="btn" href="{{ url_for('book', id=p.id) }}">Book Now</a>
+</div>
 {% endfor %}
 
 </body>
