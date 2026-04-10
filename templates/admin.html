@@ -39,24 +39,23 @@ a {
 
 <a href="{{ url_for('logout') }}">Logout</a>
 
-<h3>Add Package</h3>
+<h2>Admin</h2>
+
 <form method="post" action="{{ url_for('add_package') }}">
-    <input type="text" name="place" placeholder="Place" required>
-    <input type="text" name="price" placeholder="Price" required>
-    <button>Add</button>
+<input name="place" placeholder="Place">
+<input name="price" placeholder="Price">
+<button>Add</button>
 </form>
 
 <h3>Packages</h3>
 {% for p in packages %}
-    {{ p.place }} - ₹{{ p.price }}
-    <a href="{{ url_for('edit_package', id=p.id) }}">✏️</a>
-    <a href="{{ url_for('delete_package', id=p.id) }}">🗑️</a>
-    <br><br>
+{{ p['place'] }} - {{ p['price'] }}
+<a href="{{ url_for('delete_package', id=p['id']) }}">Delete</a><br>
 {% endfor %}
 
 <h3>Bookings</h3>
 {% for b in bookings %}
-    👤 {{ b.name }} → {{ b.place }}<br>
+{{ b['name'] }} booked {{ b['place'] }} ({{ b['payment'] }})<br>
 {% endfor %}
 
 </div>
