@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "database.db")
 app = Flask(__name__)
 app.secret_key = "secret123"
 
