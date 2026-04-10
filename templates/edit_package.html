@@ -11,10 +11,10 @@
 
 <h2>Edit Package</h2>
 
-<form method="post" action="/update_package/{{package.id}}">
-    <input name="place" value="{{package.place}}" class="form-control mb-2">
-    <input name="price" value="{{package.price}}" class="form-control mb-2">
-    <button class="btn btn-primary">Update</button>
+<form method="post" action="{{ url_for('update_package', id=package.id) }}">
+    Place: <input type="text" name="place" value="{{ package.place }}">
+    Price: <input type="text" name="price" value="{{ package.price }}">
+    <button type="submit">Update</button>
 </form>
 
 </div>
