@@ -18,6 +18,7 @@ place TEXT,
 price TEXT)
 """)
 
+# IMPORTANT: payment column included
 c.execute("""
 CREATE TABLE IF NOT EXISTS bookings(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
