@@ -86,14 +86,17 @@ h2 {
 <div class="container">
 
 {% for p in packages %}
-    <div class="card">
-        <h3>{{ p['place'] }}</h3>
-        <p>₹{{ p['price'] }}</p>
+   <div class="card">
 
-        <a class="btn" href="{{ url_for('payment', id=p['id']) }}">
-            Book Now
-        </a>
-    </div>
+    <img src="https://source.unsplash.com/250x150/?{{ p['place'] }}" width="100%" style="border-radius:10px;">
+
+    <h3>{{ p['place'] }}</h3>
+    <p>₹{{ p['price'] }}</p>
+
+    <a class="btn" href="{{ url_for('payment', id=p['id']) }}">
+        Book Now
+    </a>
+</div>
 {% endfor %}
 
 </div>
