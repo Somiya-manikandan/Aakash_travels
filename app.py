@@ -23,10 +23,9 @@ def home():
 # ---------- REGISTER ----------
 @app.route('/register', methods=['GET','POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
+   if request.method == 'POST':
+    email = request.form['email']
+    password = request.form['password']
 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -45,25 +44,25 @@ def register():
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-    email = request.form['email']
-    password = request.form['password']
+        email = request.form['email']
+        password = request.form['password']
 
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
 
-    c.execute("SELECT * FROM users WHERE email=? AND password=?",
-              (email,password))
+        c.execute("SELECT * FROM users WHERE email=? AND password=?",
+                  (email,password))
 
-    user = c.fetchone()
-    conn.close()
+        user = c.fetchone()
+        conn.close()
 
-    if user:
-        session['user'] = email   # ✅ ADD THIS LINE
-        return redirect(url_for('home'))
-    else:
-        return "Invalid login"
+        if user:
+            session['user'] = email
+            return redirect(url_for('home'))
+        else:
+            return "Invalid login"
+
     return render_template('login.html')
-
 # ---------- LOGOUT ----------
 @app.route('/logout')
 def logout():
