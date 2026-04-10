@@ -1,7 +1,9 @@
-import sqlite3
+import os
 
-conn = sqlite3.connect("database.db")
-c = conn.cursor()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "database.db")
+
+conn = sqlite3.connect(db_path)
 
 c.execute("""
 CREATE TABLE IF NOT EXISTS users(
