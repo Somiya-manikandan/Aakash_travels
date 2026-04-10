@@ -89,31 +89,25 @@ def payment(id):
         return "Package not found"
 
     if request.method == 'POST':
-        method = request.form.get('method')
+    method = request.form.get('method')
 
-        if not method:
-            return "Select payment method"
+    email = session['user']
 
-        email = session['user']
+    c.execute("SELECT name FROM users WHERE email=?", (email,))
+    user = c.fetchone()
 
-        # get user
-        c.execute("SELECT name FROM users WHERE email=?", (email,))
-        user = c.fetchone()
+    name = user[0]
+    place = package[1]
 
-        if not user:
-            return "User not found"
-
-        name = user[0]
-        place = package[1]
-
-        # insert booking
+    # ✅ SAFE INSERT HERE
+    try:
         c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
                   (name, place, method))
-
         conn.commit()
-        conn.close()
+    except Exception as e:
+        return str(e)
 
-        return redirect(url_for('success'))
+    return redirect(url_for('success'))
 
     conn.close()
     return render_template('payment.html', package=package)
