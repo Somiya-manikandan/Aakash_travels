@@ -2,21 +2,98 @@
 <html>
 <head>
 <title>Payment</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #f4f6f8;
+}
+
+.container {
+    margin-top: 50px;
+    background: white;
+    width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px gray;
+}
+
+h2 {
+    color: #333;
+}
+
+.option {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+button {
+    margin-top: 15px;
+    background: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #218838;
+}
+
+.qr {
+    margin-top: 20px;
+}
+
+img {
+    margin-top: 10px;
+    border-radius: 10px;
+}
+</style>
+
 </head>
 <body>
 
-<h2>Choose Payment Method</h2>
+<div class="container">
+
+<h2>💳 Payment Page</h2>
+
+<!-- PACKAGE INFO -->
+<h3>{{ package[1] }}</h3>
+<p>Amount: ₹{{ package[2] }}</p>
 
 <form method="post">
-    <input type="radio" name="method" value="UPI" required> UPI<br>
-    <input type="radio" name="method" value="Card"> Card<br>
-    <input type="radio" name="method" value="Cash"> Cash<br><br>
 
-    <button>Pay Now</button>
+<div class="option">
+<input type="radio" name="method" value="UPI" required> UPI
+</div>
+
+<div class="option">
+<input type="radio" name="method" value="Card"> Card
+</div>
+
+<div class="option">
+<input type="radio" name="method" value="Cash"> Cash
+</div>
+
+<button type="submit">Pay Now</button>
+
 </form>
 
-<h3>Scan UPI QR</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=demo@upi&pn=AakashTravels&am=500">
+<!-- ✅ UPI QR SCANNER -->
+<div class="qr">
+<h3>📱 Scan UPI QR</h3>
+
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=demo@upi&pn=AakashTravels&am={{ package[2] }}" />
+
+<p>Use Google Pay / PhonePe / Paytm</p>
+</div>
+
+</div>
 
 </body>
 </html>
