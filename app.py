@@ -1,113 +1,174 @@
-🌍 3. templates/index.html
-<!DOCTYPE html>
-<html>
-<head>
-<title>Aakash Travels</title>
-<style>
-body { font-family:Arial; background:#f4f6f8; text-align:center; }
-h1 { background:#007bff; color:white; padding:15px; }
+from flask import Flask, render_template, request, redirect, url_for, session
+import sqlite3
 
-.card {
-    background:white;
-    width:300px;
-    margin:20px auto;
-    padding:15px;
-    border-radius:10px;
-}
+app = Flask(__name__)
+app.secret_key = "secret123"
 
-.btn {
-    background:#ff5722;
-    color:white;
-    padding:8px;
-    text-decoration:none;
-    border-radius:5px;
-}
-</style>
-</head>
-<body>
+# ---------- HOME ----------
+@app.route('/')
+def home():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
 
-<h1>Aakash Travels</h1>
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
 
-<a href="/login">Login</a> |
-<a href="/register">Register</a> |
-<a href="/logout">Logout</a>
+    conn.close()
+    return render_template('index.html', packages=packages)
 
-<h2>Packages</h2>
+# ---------- REGISTER ----------
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
 
-{% for p in packages %}
-<div class="card">
-    <h3>{{ p[1] }}</h3>
-    <p>₹{{ p[2] }}</p>
-    <a class="btn" href="/payment/{{ p[0] }}">Book Now</a>
-</div>
-{% endfor %}
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
 
-</body>
-</html>
-💳 4. templates/payment.html
-<!DOCTYPE html>
-<html>
-<head>
-<title>Payment</title>
-</head>
-<body>
+        c.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
+                  (name,email,password))
 
-<h2>Payment</h2>
+        conn.commit()
+        conn.close()
 
-<form method="post">
-    <input type="radio" name="method" value="UPI" required> UPI<br>
-    <input type="radio" name="method" value="Card"> Card<br>
-    <input type="radio" name="method" value="Cash"> Cash<br><br>
+        return redirect(url_for('login'))
 
-    <button>Pay Now</button>
-</form>
+    return render_template('register.html')
 
-</body>
-</html>
-🔐 5. login.html
-<h2>Login</h2>
-<form method="post">
-<input type="email" name="email" placeholder="Email"><br>
-<input type="password" name="password" placeholder="Password"><br>
-<button>Login</button>
-</form>
-📝 6. register.html
-<h2>Register</h2>
-<form method="post">
-<input type="text" name="name" placeholder="Name"><br>
-<input type="email" name="email"><br>
-<input type="password" name="password"><br>
-<button>Register</button>
-</form>
-👨‍💼 7. admin.html
-<h2>Admin</h2>
+# ---------- LOGIN ----------
+@app.route('/login', methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
 
-<form method="post" action="/add_package">
-<input name="place" placeholder="Place">
-<input name="price" placeholder="Price">
-<button>Add</button>
-</form>
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
 
-<h3>Packages</h3>
-{% for p in packages %}
-{{ p[1] }} - {{ p[2] }}
-<a href="/delete/{{ p[0] }}">Delete</a><br>
-{% endfor %}
+        c.execute("SELECT * FROM users WHERE email=? AND password=?",
+                  (email,password))
 
-<h3>Bookings</h3>
-{% for b in bookings %}
-{{ b[1] }} booked {{ b[2] }} ({{ b[3] }})<br>
-{% endfor %}
-✏️ 8. edit_package.html
-<h2>Edit</h2>
+        user = c.fetchone()
+        conn.close()
 
-<form method="post" action="/update/{{ package[0] }}">
-<input name="place" value="{{ package[1] }}">
-<input name="price" value="{{ package[2] }}">
-<button>Update</button>
-</form>
-📦 9. requirements.txt
-flask
-gunicorn
-🚀 10. Procfile
-web: gunicorn app:app
+        if user:
+            session['user'] = email
+            return redirect(url_for('home'))
+
+    return render_template('login.html')
+
+# ---------- LOGOUT ----------
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('home'))
+
+# ---------- PAYMENT ----------
+@app.route('/payment/<int:id>', methods=['GET','POST'])
+def payment(id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        method = request.form['method']
+        email = session['user']
+
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+
+        c.execute("SELECT name FROM users WHERE email=?", (email,))
+        name = c.fetchone()[0]
+
+        c.execute("SELECT place FROM packages WHERE id=?", (id,))
+        place = c.fetchone()[0]
+
+        c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
+                  (name, place, method))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('home'))
+
+    return render_template('payment.html')
+
+# ---------- ADMIN ----------
+@app.route('/admin')
+def admin():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM packages")
+    packages = c.fetchall()
+
+    c.execute("SELECT * FROM bookings")
+    bookings = c.fetchall()
+
+    conn.close()
+    return render_template('admin.html', packages=packages, bookings=bookings)
+
+# ---------- ADD PACKAGE ----------
+@app.route('/add_package', methods=['POST'])
+def add_package():
+    place = request.form['place']
+    price = request.form['price']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("INSERT INTO packages (place,price) VALUES (?,?)",
+              (place,price))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
+# ---------- DELETE ----------
+@app.route('/delete/<int:id>')
+def delete_package(id):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("DELETE FROM packages WHERE id=?", (id,))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
+# ---------- EDIT ----------
+@app.route('/edit/<int:id>')
+def edit_package(id):
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM packages WHERE id=?", (id,))
+    package = c.fetchone()
+
+    conn.close()
+    return render_template('edit_package.html', package=package)
+
+@app.route('/update/<int:id>', methods=['POST'])
+def update_package(id):
+    place = request.form['place']
+    price = request.form['price']
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+
+    c.execute("UPDATE packages SET place=?, price=? WHERE id=?",
+              (place,price,id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin'))
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=True)
