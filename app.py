@@ -70,12 +70,14 @@ def logout():
 # ---------- PAYMENT ----------
 @app.route('/payment/<int:id>', methods=['GET','POST'])
 def payment(id):
+
+    print(session)   # 👈 ADD HERE (FIRST LINE INSIDE FUNCTION)
+
     if 'user' not in session:
         return redirect(url_for('login'))
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-
     # get package
     c.execute("SELECT * FROM packages WHERE id=?", (id,))
     package = c.fetchone()
