@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h2>💳 Payment</h2>
+<h2>Choose Payment Method</h2>
 
 <form method="post">
     <input type="radio" name="method" value="UPI" required> UPI<br>
@@ -14,6 +14,9 @@
 
     <button>Pay Now</button>
 </form>
+
+<h3>Scan UPI QR</h3>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=demo@upi&pn=AakashTravels&am=500">
 
 </body>
 </html>
