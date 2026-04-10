@@ -79,14 +79,13 @@ def logout():
 @app.route('/payment/<int:id>', methods=['GET','POST'])
 def payment(id):
 
-    print(session)
-
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
+    # get package
     c.execute("SELECT * FROM packages WHERE id=?", (id,))
     package = c.fetchone()
 
@@ -95,6 +94,9 @@ def payment(id):
 
     if request.method == 'POST':
         method = request.form.get('method')
+
+        if not method:
+            return "Select payment method"
 
         email = session['user']
 
@@ -107,19 +109,17 @@ def payment(id):
         name = user[0]
         place = package[1]
 
-        try:
-            c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
-                      (name, place, method))
-            conn.commit()
-        except Exception as e:
-            return str(e)
+        c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
+                  (name, place, method))
 
+        conn.commit()
         conn.close()
+
+        # ✅ 👉 PUT HERE (VERY IMPORTANT)
         return redirect(url_for('success'))
 
     conn.close()
     return render_template('payment.html', package=package)
-
 # ---------- SUCCESS ----------
 @app.route('/success')
 def success():
