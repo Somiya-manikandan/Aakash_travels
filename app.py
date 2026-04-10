@@ -4,13 +4,14 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "database.db")
+
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 # ---------- HOME ----------
 @app.route('/')
 def home():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
@@ -23,11 +24,12 @@ def home():
 # ---------- REGISTER ----------
 @app.route('/register', methods=['GET','POST'])
 def register():
-   if request.method == 'POST':
-    email = request.form['email']
-    password = request.form['password']
+    if request.method == 'POST':
+        name = request.form['name']   # ✅ FIX
+        email = request.form['email']
+        password = request.form['password']
 
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
 
         c.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
@@ -63,6 +65,7 @@ def login():
             return "Invalid login"
 
     return render_template('login.html')
+
 # ---------- LOGOUT ----------
 @app.route('/logout')
 def logout():
@@ -73,14 +76,14 @@ def logout():
 @app.route('/payment/<int:id>', methods=['GET','POST'])
 def payment(id):
 
-    print(session)   # 👈 ADD HERE (FIRST LINE INSIDE FUNCTION)
+    print(session)
 
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    # get package
+
     c.execute("SELECT * FROM packages WHERE id=?", (id,))
     package = c.fetchone()
 
@@ -88,25 +91,28 @@ def payment(id):
         return "Package not found"
 
     if request.method == 'POST':
-    method = request.form.get('method')
+        method = request.form.get('method')
 
-    email = session['user']
+        email = session['user']
 
-    c.execute("SELECT name FROM users WHERE email=?", (email,))
-    user = c.fetchone()
+        c.execute("SELECT name FROM users WHERE email=?", (email,))
+        user = c.fetchone()
 
-    name = user[0]
-    place = package[1]
+        if not user:
+            return "User not found"
 
-    # ✅ SAFE INSERT HERE
-    try:
-        c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
-                  (name, place, method))
-        conn.commit()
-    except Exception as e:
-        return str(e)
+        name = user[0]
+        place = package[1]
 
-    return redirect(url_for('success'))
+        try:
+            c.execute("INSERT INTO bookings (name, place, payment) VALUES (?,?,?)",
+                      (name, place, method))
+            conn.commit()
+        except Exception as e:
+            return str(e)
+
+        conn.close()
+        return redirect(url_for('success'))
 
     conn.close()
     return render_template('payment.html', package=package)
@@ -119,7 +125,7 @@ def success():
 # ---------- ADMIN ----------
 @app.route('/admin')
 def admin():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
@@ -138,7 +144,7 @@ def add_package():
     place = request.form['place']
     price = request.form['price']
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute("INSERT INTO packages (place,price) VALUES (?,?)",
@@ -152,7 +158,7 @@ def add_package():
 # ---------- DELETE ----------
 @app.route('/delete/<int:id>')
 def delete_package(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute("DELETE FROM packages WHERE id=?", (id,))
@@ -165,7 +171,7 @@ def delete_package(id):
 # ---------- EDIT ----------
 @app.route('/edit/<int:id>')
 def edit_package(id):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
@@ -180,7 +186,7 @@ def update_package(id):
     place = request.form['place']
     price = request.form['price']
 
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     c.execute("UPDATE packages SET place=?, price=? WHERE id=?",
