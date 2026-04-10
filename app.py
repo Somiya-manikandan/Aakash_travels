@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
 
-# Auto create DB (for Render)
+# Auto create DB
 if not os.path.exists("database.db"):
     import database
 
@@ -14,14 +14,14 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-# ---------------- HOME ----------------
+# HOME
 @app.route('/')
 def home():
     db = get_db()
     packages = db.execute("SELECT * FROM packages").fetchall()
     return render_template('index.html', packages=packages)
 
-# ---------------- REGISTER ----------------
+# REGISTER
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
@@ -29,10 +29,10 @@ def register():
         db.execute("INSERT INTO users (name,email,password) VALUES (?,?,?)",
                    (request.form['name'], request.form['email'], request.form['password']))
         db.commit()
-        return redirect('/login')
+        return redirect(url_for('login'))
     return render_template('register.html')
 
-# ---------------- LOGIN ----------------
+# LOGIN
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -44,22 +44,22 @@ def login():
             session['name'] = user['name']
 
             if request.form['email'] == "admin@gmail.com":
-                return redirect('/admin')
+                return redirect(url_for('admin'))
 
-            return redirect('/')
+            return redirect(url_for('home'))
     return render_template('login.html')
 
-# ---------------- LOGOUT ----------------
+# LOGOUT
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect('/')
+    return redirect(url_for('home'))
 
-# ---------------- BOOK ----------------
+# BOOKING
 @app.route('/book/<int:id>', methods=['GET','POST'])
 def book(id):
     if 'user' not in session:
-        return redirect('/login')
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         db = get_db()
@@ -70,7 +70,7 @@ def book(id):
 
     return render_template('booking.html')
 
-# ---------------- ADMIN ----------------
+# ADMIN PANEL
 @app.route('/admin')
 def admin():
     db = get_db()
@@ -86,39 +86,39 @@ def admin():
 
     return render_template('admin.html', packages=packages, bookings=bookings)
 
-# ---------------- DELETE ----------------
+# DELETE PACKAGE
 @app.route('/delete_package/<int:id>')
 def delete_package(id):
     db = get_db()
     db.execute("DELETE FROM packages WHERE id=?", (id,))
     db.commit()
-    return redirect('/admin')
+    return redirect(url_for('admin'))
 
-# ---------------- EDIT ----------------
+# EDIT PACKAGE
 @app.route('/edit_package/<int:id>')
 def edit_package(id):
     db = get_db()
     package = db.execute("SELECT * FROM packages WHERE id=?", (id,)).fetchone()
     return render_template('edit_package.html', package=package)
 
-# ---------------- UPDATE ----------------
+# UPDATE PACKAGE
 @app.route('/update_package/<int:id>', methods=['POST'])
 def update_package(id):
     db = get_db()
     db.execute("UPDATE packages SET place=?, price=? WHERE id=?",
                (request.form['place'], request.form['price'], id))
     db.commit()
-    return redirect('/admin')
+    return redirect(url_for('admin'))
 
-# ---------------- ADD ----------------
+# ADD PACKAGE
 @app.route('/add_package', methods=['POST'])
 def add_package():
     db = get_db()
     db.execute("INSERT INTO packages (place, price) VALUES (?,?)",
                (request.form['place'], request.form['price']))
     db.commit()
-    return redirect('/admin')
+    return redirect(url_for('admin'))
 
-# ✅ IMPORTANT FOR RENDER
+# RUN APP (RENDER FIX)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
